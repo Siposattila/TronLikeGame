@@ -254,8 +254,8 @@ Data Segment
     player1PosY dw 0
     player2PosX dw 0
     player2PosY dw 0
-    player1Color db 64
-    player2Color db 50
+    player1Color db 42
+    player2Color db 52
     colorToDraw db 0
     delay dw 0
 Data Ends
