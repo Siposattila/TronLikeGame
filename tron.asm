@@ -15,7 +15,40 @@ Start:
     mov dh, 10 ; sor
     mov dl, 10 ; oszlop
     int 10h
+    jmp Menu
 
+GameOver:
+    mov ah, 00h ; kepernyo torles
+    mov al, 03h ; video mod dosbox miatt 80x25
+    int 10h
+
+    ; Kurzor pozicionalas
+    mov ah, 02h
+    mov bh, 0
+    mov dh, 10 ; sor
+    mov dl, 10 ; oszlop
+    int 10h
+
+    mov ah, 09h
+
+    cmp winningPlayer, 1
+    je player1
+    cmp winningPlayer, 2
+    je player2
+    player1:
+        mov dx, offset winningPlayer1Message
+        int 21h
+        mov dx, offset endGameMessage
+        int 21h
+        jmp Start
+    player2:
+        mov dx, offset winningPlayer2Message
+        int 21h
+        mov dx, offset endGameMessage
+        int 21h
+        jmp Start
+
+Menu:
     ; menu kiiratas
     mov ah, 09h
     mov dx, offset mainMenuOption1
@@ -38,6 +71,21 @@ Start:
     cmp al, "2" ; 2 -> Kilepes
     jz ProgramEnd
 
+GameLoop:
+    ; vege van e jateknak???
+    cmp isGameOver, 1
+    je GameOver
+    call InputHandler
+    call UpdatePlayers
+
+    ; cilus kesleltetes, hogy lehessen ertelmes jatek menet
+    mov delay, 32768
+    loopDelay:
+        dec delay
+        jnz loopDelay
+
+    jmp GameLoop
+
 Init:
     mov player1X, 1
     mov player1Y, 0
@@ -48,6 +96,8 @@ Init:
     mov player2PosX, 0
     mov player2PosY, 5
     mov colorToDraw, 0
+    mov isGameOver, 0
+    mov winningPlayer, 0
 
     mov al, 13h
     mov ah, 0
@@ -58,17 +108,6 @@ Init:
 ProgramEnd:
     mov ax, 4c00h
     int 21h
-
-GameLoop:
-    call InputHandler
-    call UpdatePlayers
-
-    mov delay, 32768
-    loopDelay:
-        dec delay
-        jnz loopDelay
-
-    jmp GameLoop
 
 InputHandler proc
 	mov ah, 01h ; ellenorizzuk, hogy lenyomtak e valamit
@@ -246,6 +285,9 @@ Code Ends
 Data Segment
     mainMenuOption1 db "1) Jatek inditasa","$"
     mainMenuOption2 db "2) Kilepes","$"
+    winningPlayer1Message db "Nyert az elso jatekos!","$"
+    winningPlayer2Message db "Nyert a masodik jatekos!","$"
+    endGameMessage db "Nyomj egy entert a menube valo visszatershez!"
     player1X dw 0
     player1Y dw 0
     player2X dw 0
@@ -258,6 +300,8 @@ Data Segment
     player2Color db 52
     colorToDraw db 0
     delay dw 0
+    isGameOver db 0
+    winningPlayer db 0
 Data Ends
 
 Stack Segment
