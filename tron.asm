@@ -39,14 +39,14 @@ Start:
     jz ProgramEnd
 
 Init:
-    mov player1X, 0
+    mov player1X, 1
     mov player1Y, 0
-    mov player2X, 0
+    mov player2X, -1
     mov player2Y, 0
     mov player1PosX, 0
     mov player1PosY, 0
-    mov player2PosX, 150
-    mov player2PosY, 100
+    mov player2PosX, 0
+    mov player2PosY, 5
     mov colorToDraw, 0
 
     mov al, 13h
@@ -63,6 +63,11 @@ GameLoop:
     call InputHandler
     call UpdatePlayers
 
+    mov delay, 32768
+    loopDelay:
+        dec delay
+        jnz loopDelay
+
     jmp GameLoop
 
 InputHandler proc
@@ -75,83 +80,97 @@ InputHandler proc
 	int 16h
 	pressed:
 		cmp ah, 4Bh ; balra nyil
-		je player1
+		je Player1Left
 		cmp ah, 4Dh ; jobbra nyil
-		je player1
+		je Player1Right
 		cmp ah, 48h ; fel nyil
-		je player1
+		je Player1Up
 		cmp ah, 50h ; le nyil
-		je player1
+		je Player1Down
 		cmp al, "a"
-		je player2
+		je Player2Left
+        cmp al, "d"
+        je Player2Right
 		cmp al, "w"
-		je player2
+		je Player2Up
 		cmp al, "s"
-		je player2
-		cmp al, "d"
-		je player2
+		je Player2Down
         cmp al, "q" ; teszt miatt van
         je ProgramEnd
 	notPressed:
         ret
-    player1:
-		cmp ah, 4Bh ; balra nyil
-		je SetPlayer1Left
-		cmp ah, 4Dh ; jobbra nyil
-		je SetPlayer1Right
-		cmp ah, 48h ; fel nyil
-		je SetPlayer1Up
-		cmp ah, 50h ; le nyil
-		je SetPlayer1Down
-    player2:
-		cmp al, "a"
-		je SetPlayer2Left
-        cmp al, "d"
-        je SetPlayer2Right
-		cmp al, "w"
-		je SetPlayer2Up
-		cmp al, "s"
-		je SetPlayer2Down
 InputHandler endp
 
-SetPlayer1Left:
+Player1Left:
     mov player1X, -1
     mov player1Y, 0
-    dec player1PosX
+    call DecPlayer1X
     ret
-SetPlayer1Right:
+Player1Right:
     mov player1X, 1
     mov player1Y, 0
-    add player1PosX, 1
+    call AddPlayer1X
     ret
-SetPlayer1Up:
+Player1Up:
     mov player1X, 0
     mov player1Y, -1
-    dec player1PosY
+    call DecPlayer1Y
     ret
-SetPlayer1Down:
+Player1Down:
     mov player1X, 0
     mov player1Y, 1
-    add player1PosY, 1
+    call AddPlayer1Y
     ret
-SetPlayer2Left:
+Player2Left:
     mov player2X, -1
     mov player2Y, 0
-    dec player2PosX
+    call DecPlayer2X
     ret
-SetPlayer2Right:
+Player2Right:
     mov player2X, 1
     mov player2Y, 0
-    add player2PosX, 1
+    call AddPlayer2X
     ret
-SetPlayer2Up:
+Player2Up:
     mov player2X, 0
     mov player2Y, -1
-    dec player2PosY
+    call DecPlayer2Y
     ret
-SetPlayer2Down:
+Player2Down:
     mov player2X, 0
     mov player2Y, 1
+    call AddPlayer2Y
+    ret
+
+DecPlayer1X:
+    dec player1PosX
+    ret
+
+AddPlayer1X:
+    add player1PosX, 1
+    ret
+
+DecPlayer1Y:
+    dec player1PosY
+    ret
+
+AddPlayer1Y:
+    add player1PosY, 1
+    ret
+
+DecPlayer2X:
+    dec player2PosX
+    ret
+
+AddPlayer2X:
+    add player2PosX, 1
+    ret
+
+DecPlayer2Y:
+    dec player2PosY
+    ret
+
+AddPlayer2Y:
     add player2PosY, 1
     ret
 
@@ -162,17 +181,65 @@ DrawPixel:
 	ret
 
 UpdatePlayers:
+    call AutoRunPlayer1
     mov cx, player1PosX
     mov dx, player1PosY
     mov al, player1Color
     mov colorToDraw, al
     call DrawPixel
+    call AutoRunPlayer2
     mov cx, player2PosX
     mov dx, player2PosY
     mov al, player2Color
     mov colorToDraw, al
     call DrawPixel
     ret
+
+AutoRunPlayer1:
+    cmp player1X, 1
+    je player1XAuto1
+    cmp player1X, -1
+    je player1XAuto2
+    cmp player1Y, 1
+    je player1YAuto1
+    cmp player1Y, -1
+    je player1YAuto2
+    ret
+    player1XAuto1:
+        call AddPlayer1X
+        ret
+    player1XAuto2:
+        call DecPlayer1X
+        ret
+    player1YAuto1:
+        call AddPlayer1Y
+        ret
+    player1YAuto2:
+        call DecPlayer1Y
+        ret
+
+AutoRunPlayer2:
+    cmp player2X, 1
+    je player2XAuto1
+    cmp player2X, -1
+    je player2XAuto2
+    cmp player2Y, 1
+    je player2YAuto1
+    cmp player2Y, -1
+    je player2YAuto2
+    ret
+    player2XAuto1:
+        call AddPlayer2X
+        ret
+    player2XAuto2:
+        call DecPlayer2X
+        ret
+    player2YAuto1:
+        call AddPlayer2Y
+        ret
+    player2YAuto2:
+        call DecPlayer2Y
+        ret
 
 Code Ends
 
@@ -190,6 +257,7 @@ Data Segment
     player1Color db 64
     player2Color db 50
     colorToDraw db 0
+    delay dw 0
 Data Ends
 
 Stack Segment
