@@ -1,27 +1,64 @@
 Code Segment
 	assume CS:Code, DS:Data, SS:Stack
 
-CollisionDetection:
-    mov ax, [player1PosX]
-    cmp ax, word ptr player2PosX
-    je Player1GameOver
-
-    mov ax, [player1PosY]
-    cmp ax, word ptr player2PosY
-    je Player1GameOver
-    ret
-
 Start:
 	mov ax, Data
 	mov ds, ax
 
     jmp Menu
 
+CollisionDetection:
+    cmp playerCollisionCheck, 1
+    je player1Check
+    cmp playerCollisionCheck, 2
+    je player2Check
+    ret
+    player1Check:
+        mov ah, 0Dh
+        mov cx, [player1PosX]
+        mov dx, [player1PosY]
+        int 10h
+
+        cmp al, [player2Color]
+        je Player1GameOver
+        cmp al, [borderColor]
+        je Player1GameOver
+
+        mov ah, 0Dh
+        mov cx, [player1NextPosX]
+        mov dx, [player1NextPosY]
+        int 10h
+
+        cmp al, [player1Color]
+        je Player1GameOver
+        ret
+    player2Check:
+        mov ah, 0Dh
+        mov cx, [player2PosX]
+        mov dx, [player2PosY]
+        int 10h
+
+        cmp al, [player2Color]
+        je Player2GameOver
+        cmp al, [player1Color]
+        je Player2GameOver
+        cmp al, [borderColor]
+        je Player2GameOver
+        ret
+
 GameOver:
     cmp winningPlayer, 1
-    je player1
+    je Player1
     cmp winningPlayer, 2
-    je player2
+    je Player2
+
+Player1GameOver:
+    mov winningPlayer, 2
+    jmp GameOver
+
+Player2GameOver:
+    mov winningPlayer, 1
+    jmp GameOver
 
 Player1:
     mov ah, 00h ; kepernyo torles
@@ -35,7 +72,7 @@ Player1:
     mov dl, 0 ; oszlop
     int 10h
 
-    mov dx, offset winningPlayer2Message
+    mov dx, offset winningPlayer1Message
     mov ah, 09h
     int 21h
 
@@ -65,14 +102,6 @@ Player2:
 
     cmp al, 13
     je Menu
-
-Player1GameOver:
-    mov winningPlayer, 2
-    jmp GameOver
-
-Player2GameOver:
-    mov winningPlayer, 1
-    jmp GameOver
 
 Menu:
     mov ah, 00h ; kepernyo torles
@@ -108,7 +137,6 @@ Menu:
 GameLoop:
     call InputHandler
     call UpdatePlayers
-    call CollisionDetection
 
     ; cilus kesleltetes, hogy lehessen ertelmes jatek menet
     mov delay, 32768
@@ -127,8 +155,13 @@ Init:
     mov player1PosY, 0
     mov player2PosX, 150
     mov player2PosY, 100
+    mov player1NextPosX, 1
+    mov player1NextPosY, 0
+    mov player2NextPosX, 149
+    mov player2NextPosY, 100
     mov colorToDraw, 0
     mov winningPlayer, 0
+    mov playerCollisionCheck, 0
 
     mov al, 13h
     mov ah, 0
@@ -212,34 +245,58 @@ Player2Down:
 
 DecPlayer1X:
     dec player1PosX
+    mov cx, player1PosX
+    mov player1NextPosX, cx
+    dec player1NextPosX
     ret
 
 AddPlayer1X:
     add player1PosX, 1
+    mov cx, player1PosX
+    mov player1NextPosX, cx
+    add player1NextPosX, 1
     ret
 
 DecPlayer1Y:
     dec player1PosY
+    mov cx, player1PosY
+    mov player1NextPosY, cx
+    dec player1NextPosY
     ret
 
 AddPlayer1Y:
     add player1PosY, 1
+    mov cx, player1PosY
+    mov player1NextPosY, cx
+    add player1NextPosY, 1
     ret
 
 DecPlayer2X:
     dec player2PosX
+    mov cx, player2PosX
+    mov player2NextPosX, cx
+    dec player2NextPosX
     ret
 
 AddPlayer2X:
     add player2PosX, 1
+    mov cx, player2PosX
+    mov player2NextPosX, cx
+    add player2NextPosX, 1
     ret
 
 DecPlayer2Y:
     dec player2PosY
+    mov cx, player2PosY
+    mov player2NextPosY, cx
+    dec player2NextPosY
     ret
 
 AddPlayer2Y:
     add player2PosY, 1
+    mov cx, player2PosY
+    mov player2NextPosY, cx
+    add player2NextPosY, 1
     ret
 
 DrawPixel:
@@ -250,12 +307,16 @@ DrawPixel:
 
 UpdatePlayers:
     call AutoRunPlayer1
+    mov playerCollisionCheck, 1
+    call CollisionDetection
     mov cx, player1PosX
     mov dx, player1PosY
     mov al, player1Color
     mov colorToDraw, al
     call DrawPixel
     call AutoRunPlayer2
+    mov playerCollisionCheck, 2
+    call CollisionDetection
     mov cx, player2PosX
     mov dx, player2PosY
     mov al, player2Color
@@ -323,12 +384,17 @@ Data Segment
     player1PosY dw 0
     player2PosX dw 0
     player2PosY dw 0
+    player1NextPosX dw 0
+    player1NextPosY dw 0
+    player2NextPosX dw 0
+    player2NextPosY dw 0
     player1Color db 42 ; narancssarga
     player2Color db 52 ; vilagos kek
     colorToDraw db 0
     delay dw 0
     winningPlayer db 0
     borderColor db 2 ; zold
+    playerCollisionCheck db 0
 Data Ends
 
 Stack Segment
