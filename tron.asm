@@ -124,15 +124,15 @@ Menu:
     mov ah, 00h
     int 16h
 
-    ; menu input lekezelese
-    cmp al, 27 ; ESC
-    jz ProgramEnd
-
     cmp al, "1" ; 1 -> jatek inditasa
     jz Init
 
     cmp al, "2" ; 2 -> Kilepes
     jz ProgramEnd
+
+ProgramEnd:
+    mov ax, 4c00h
+    int 21h
 
 GameLoop:
     call InputHandler
@@ -154,11 +154,11 @@ Init:
     mov player1PosX, 1
     mov player1PosY, 1
     mov player2PosX, 319
-    mov player2PosY, 199
+    mov player2PosY, 198
     mov player1NextPosX, 2
     mov player1NextPosY, 1
     mov player2NextPosX, 318
-    mov player2NextPosY, 199
+    mov player2NextPosY, 198
     mov colorToDraw, 0
     mov winningPlayer, 0
     mov playerCollisionCheck, 0
@@ -167,11 +167,16 @@ Init:
     mov ah, 0
     int 10h
 
+    mov al, borderColor
+    mov colorToDraw, al
+    mov borderBuilderHelper, 0
+    mov cx, 0
+    mov dx, 0
+    call BuildBorder1
+    call BuildBorder2
+    call BuildBorder3
+    call BuildBorder4
     jmp GameLoop
-
-ProgramEnd:
-    mov ax, 4c00h
-    int 21h
 
 InputHandler proc
 	mov ah, 01h ; ellenorizzuk, hogy lenyomtak e valamit
@@ -370,6 +375,46 @@ AutoRunPlayer2:
         call DecPlayer2Y
         ret
 
+BuildBorder1:
+    cmp borderBuilderHelper, 319 ; 320
+    jne buildCycle1
+    ret
+    buildCycle1:
+        call DrawPixel
+        add cx, 1
+        add borderBuilderHelper, 1
+        jmp BuildBorder1
+
+BuildBorder2:
+    cmp borderBuilderHelper, 518 ; 520
+    jne buildCycle2
+    ret
+    buildCycle2:
+        call DrawPixel
+        add dx, 1
+        add borderBuilderHelper, 1
+        jmp BuildBorder2
+
+BuildBorder3:
+    cmp borderBuilderHelper, 837
+    jne buildCycle3
+    ret
+    buildCycle3:
+        call DrawPixel
+        dec cx
+        add borderBuilderHelper, 1
+        jmp BuildBorder3
+
+BuildBorder4:
+    cmp borderBuilderHelper, 1036
+    jne buildCycle4
+    ret
+    buildCycle4:
+        call DrawPixel
+        dec dx
+        add borderBuilderHelper, 1
+        jmp BuildBorder4
+
 Code Ends
 
 Data Segment
@@ -395,6 +440,7 @@ Data Segment
     winningPlayer db 0
     borderColor db 2 ; zold
     playerCollisionCheck db 0
+    borderBuilderHelper dw 0
 Data Ends
 
 Stack Segment
