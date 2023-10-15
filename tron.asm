@@ -1,60 +1,94 @@
 Code Segment
 	assume CS:Code, DS:Data, SS:Stack
 
+CollisionDetection:
+    mov ax, [player1PosX]
+    cmp ax, word ptr player2PosX
+    je Player1GameOver
+
+    mov ax, [player1PosY]
+    cmp ax, word ptr player2PosY
+    je Player1GameOver
+    ret
+
 Start:
 	mov ax, Data
 	mov ds, ax
 
-    mov ah, 00h ; kepernyo torles
-    mov al, 03h ; video mod dosbox miatt 80x25
-    int 10h
-
-    ; Kurzor pozicionalas
-    mov ah, 02h
-    mov bh, 0
-    mov dh, 10 ; sor
-    mov dl, 10 ; oszlop
-    int 10h
     jmp Menu
 
 GameOver:
-    mov ah, 00h ; kepernyo torles
-    mov al, 03h ; video mod dosbox miatt 80x25
-    int 10h
-
-    ; Kurzor pozicionalas
-    mov ah, 02h
-    mov bh, 0
-    mov dh, 10 ; sor
-    mov dl, 10 ; oszlop
-    int 10h
-
-    mov ah, 09h
-
     cmp winningPlayer, 1
     je player1
     cmp winningPlayer, 2
     je player2
-    player1:
-        mov dx, offset winningPlayer1Message
-        int 21h
-        mov dx, offset endGameMessage
-        int 21h
-        jmp Start
-    player2:
-        mov dx, offset winningPlayer2Message
-        int 21h
-        mov dx, offset endGameMessage
-        int 21h
-        jmp Start
 
-Menu:
-    ; menu kiiratas
+Player1:
+    mov ah, 00h ; kepernyo torles
+    mov al, 03h ; video mod dosbox miatt 80x25
+    int 10h
+
+    ; Kurzor pozicionalas
+    mov ah, 02h
+    mov bh, 0
+    mov dh, 0 ; sor
+    mov dl, 0 ; oszlop
+    int 10h
+
+    mov dx, offset winningPlayer2Message
     mov ah, 09h
-    mov dx, offset mainMenuOption1
     int 21h
 
-    mov dx, offset mainMenuOption2
+    mov ah, 00h
+    int 16h
+
+    cmp al, 13
+    je Menu
+Player2:
+    mov ah, 00h ; kepernyo torles
+    mov al, 03h ; video mod dosbox miatt 80x25
+    int 10h
+
+    ; Kurzor pozicionalas
+    mov ah, 02h
+    mov bh, 0
+    mov dh, 0 ; sor
+    mov dl, 0 ; oszlop
+    int 10h
+
+    mov dx, offset winningPlayer2Message
+    mov ah, 09h
+    int 21h
+
+    mov ah, 00h
+    int 16h
+
+    cmp al, 13
+    je Menu
+
+Player1GameOver:
+    mov winningPlayer, 2
+    jmp GameOver
+
+Player2GameOver:
+    mov winningPlayer, 1
+    jmp GameOver
+
+Menu:
+    mov ah, 00h ; kepernyo torles
+    mov al, 03h ; video mod dosbox miatt 80x25
+    int 10h
+
+    ; Kurzor pozicionalas
+    mov ah, 02h
+    mov bh, 0
+    mov dh, 0 ; sor
+    mov dl, 0 ; oszlop
+    int 10h
+
+    ; menu kiiratas
+    mov ah, 09h
+    mov dx, offset mainMenu
     int 21h
 
     ; Megmondom neki, hogy input lesz!!!
@@ -72,11 +106,9 @@ Menu:
     jz ProgramEnd
 
 GameLoop:
-    ; vege van e jateknak???
-    cmp isGameOver, 1
-    je GameOver
     call InputHandler
     call UpdatePlayers
+    call CollisionDetection
 
     ; cilus kesleltetes, hogy lehessen ertelmes jatek menet
     mov delay, 32768
@@ -93,10 +125,9 @@ Init:
     mov player2Y, 0
     mov player1PosX, 0
     mov player1PosY, 0
-    mov player2PosX, 0
-    mov player2PosY, 5
+    mov player2PosX, 150
+    mov player2PosY, 100
     mov colorToDraw, 0
-    mov isGameOver, 0
     mov winningPlayer, 0
 
     mov al, 13h
@@ -134,8 +165,6 @@ InputHandler proc
 		je Player2Up
 		cmp al, "s"
 		je Player2Down
-        cmp al, "q" ; teszt miatt van
-        je ProgramEnd
 	notPressed:
         ret
 InputHandler endp
@@ -283,11 +312,9 @@ AutoRunPlayer2:
 Code Ends
 
 Data Segment
-    mainMenuOption1 db "1) Jatek inditasa","$"
-    mainMenuOption2 db "2) Kilepes","$"
-    winningPlayer1Message db "Nyert az elso jatekos!","$"
-    winningPlayer2Message db "Nyert a masodik jatekos!","$"
-    endGameMessage db "Nyomj egy entert a menube valo visszatershez!"
+    mainMenu db "1) Jatek inditasa", 13, 10, "2) Kilepes$"
+    winningPlayer1Message db "Nyert az elso jatekos!", 13, 10, "Nyomj egy entert a menube valo visszatershez!$"
+    winningPlayer2Message db "Nyert a masodik jatekos!", 13, 10, "Nyomj egy entert a menube valo visszatershez!$"
     player1X dw 0
     player1Y dw 0
     player2X dw 0
@@ -296,12 +323,12 @@ Data Segment
     player1PosY dw 0
     player2PosX dw 0
     player2PosY dw 0
-    player1Color db 42
-    player2Color db 52
+    player1Color db 42 ; narancssarga
+    player2Color db 52 ; vilagos kek
     colorToDraw db 0
     delay dw 0
-    isGameOver db 0
     winningPlayer db 0
+    borderColor db 2 ; zold
 Data Ends
 
 Stack Segment
