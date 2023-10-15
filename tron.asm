@@ -81,6 +81,8 @@ Player1:
 
     cmp al, 13
     je Menu
+    jmp Player1
+
 Player2:
     mov ah, 00h ; kepernyo torles
     mov al, 03h ; video mod dosbox miatt 80x25
@@ -102,6 +104,7 @@ Player2:
 
     cmp al, 13
     je Menu
+    jmp Player2
 
 Menu:
     mov ah, 00h ; kepernyo torles
@@ -125,10 +128,12 @@ Menu:
     int 16h
 
     cmp al, "1" ; 1 -> jatek inditasa
-    jz Init
+    je Init
 
     cmp al, "2" ; 2 -> Kilepes
-    jz ProgramEnd
+    je ProgramEnd
+
+    jmp Menu
 
 ProgramEnd:
     mov ax, 4c00h
