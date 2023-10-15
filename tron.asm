@@ -151,14 +151,14 @@ Init:
     mov player1Y, 0
     mov player2X, -1
     mov player2Y, 0
-    mov player1PosX, 0
-    mov player1PosY, 0
-    mov player2PosX, 150
-    mov player2PosY, 100
-    mov player1NextPosX, 1
-    mov player1NextPosY, 0
-    mov player2NextPosX, 149
-    mov player2NextPosY, 100
+    mov player1PosX, 1
+    mov player1PosY, 1
+    mov player2PosX, 319
+    mov player2PosY, 199
+    mov player1NextPosX, 2
+    mov player1NextPosY, 1
+    mov player2NextPosX, 318
+    mov player2NextPosY, 199
     mov colorToDraw, 0
     mov winningPlayer, 0
     mov playerCollisionCheck, 0
