@@ -455,7 +455,7 @@ Data Segment
     player1Color db 42 ; narancssarga
     player2Color db 52 ; vilagos kek
     colorToDraw db 0
-    delay dw 0
+    ;delay dw 0
     winningPlayer db 0
     borderColor db 2 ; zold
     playerCollisionCheck db 0
