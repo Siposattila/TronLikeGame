@@ -141,15 +141,29 @@ ProgramEnd:
 
 GameLoop:
     call InputHandler
-    call UpdatePlayers
 
     ; cilus kesleltetes, hogy lehessen ertelmes jatek menet
-    mov delay, 32768
-    loopDelay:
-        dec delay
-        jnz loopDelay
+    ;mov delay, 32768
+    ;loopDelay:
+    ;    dec delay
+    ;    jnz loopDelay
 
-    jmp GameLoop
+    mov ah, 0h
+    int 1ah
+
+    mov bx, word ptr [prevUpdateTime]
+    cmp bx, dx
+    jne updateTime
+
+    jmp notUpdating
+
+    updateTime:
+        mov word ptr [prevUpdateTime], dx
+        call UpdatePlayers
+
+    notUpdating:
+        jmp GameLoop
+        
 
 Init:
     mov player1X, 1
@@ -446,6 +460,7 @@ Data Segment
     borderColor db 2 ; zold
     playerCollisionCheck db 0
     borderBuilderHelper dw 0
+    prevUpdateTime dw 0
 Data Ends
 
 Stack Segment
